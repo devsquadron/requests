@@ -39,21 +39,22 @@ func fromResponse[T any](res *http.Response) (*T, error) {
 	return nil, errors.New(fmt.Sprintf("The response failed with status %s", res.Status))
 }
 
-func (clnt *TaskClient) CreateNewTask(tkn string, tsk *models.Task, tm string) error {
+func (clnt *TaskClient) CreateNewTask(tkn string, tsk *models.Task, tm string) (uint64, error) {
 	var (
-		err     error
-		tskData []byte
-		res     *http.Response
-		req     *http.Request
+		err          error
+		tskData      []byte
+		res          *http.Response
+		req          *http.Request
+		createdTskId *uint64
 	)
 
 	tskData, err = json.Marshal(tsk)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	tskCreateUrl, err := getUrl(clnt.UrlString, "/task/")
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	q := tskCreateUrl.Query()
@@ -62,19 +63,25 @@ func (clnt *TaskClient) CreateNewTask(tkn string, tsk *models.Task, tm string) e
 
 	req, err = http.NewRequest(http.MethodPost, tskCreateUrl.String(), bytes.NewBuffer(tskData))
 	if err != nil {
-		return err
+		return 0, err
 	}
 	req.Header.Add("Authorization", tkn)
 
 	res, err = http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return getErrorFromResponse(res)
+		return 0, getErrorFromResponse(res)
 	}
-	return nil
+
+	createdTskId, err = fromResponse[uint64](res)
+	if err != nil {
+		return 0, err
+	}
+
+	return *createdTskId, nil
 }
 
 func (clnt *TaskClient) UpdateTask(tkn string, tsk *models.Task, tm string) error {
