@@ -23,6 +23,7 @@ func NewTaskClient(url string) *TaskClient {
 	}
 }
 
+// TODO: move to utils
 func fromResponse[T any](res *http.Response) (*T, error) {
 	var (
 		err error
@@ -144,7 +145,7 @@ func (clnt *TaskClient) GetTasks(tkn string, tm string, tag string, statuses []s
 	}
 	tsksUrl.RawQuery = q.Encode()
 
-	req, err = http.NewRequest(http.MethodGet, tsksUrl.String(), bytes.NewBuffer([]byte{}))
+	req, err = http.NewRequest(http.MethodGet, tsksUrl.String(), EMPTY_BYTE_ARRAY)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +185,7 @@ func (clnt *TaskClient) GetTaskById(tkn string, id uint64, tm string) (*models.T
 	q.Set("team", tm)
 	tskUrl.RawQuery = q.Encode()
 
-	req, err = http.NewRequest(http.MethodGet, tskUrl.String(), bytes.NewBuffer([]byte{}))
+	req, err = http.NewRequest(http.MethodGet, tskUrl.String(), EMPTY_BYTE_ARRAY)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +222,7 @@ func (clnt *TaskClient) GetTagTaskDistribution(tkn string, tm string) (
 	q.Set("team", tm)
 	tsksUrl.RawQuery = q.Encode()
 
-	req, err = http.NewRequest(http.MethodGet, tsksUrl.String(), bytes.NewBuffer([]byte{}))
+	req, err = http.NewRequest(http.MethodGet, tsksUrl.String(), EMPTY_BYTE_ARRAY)
 	if err != nil {
 		return nil, err
 	}

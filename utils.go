@@ -1,12 +1,17 @@
 package requests
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
 
 	"github.com/devsquadron/models"
+)
+
+var (
+	EMPTY_BYTE_ARRAY = bytes.NewBuffer([]byte{})
 )
 
 func getUrl(base string, ext string) (*url.URL, error) {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/url"
 
 	"github.com/devsquadron/models"
 )
@@ -89,6 +90,76 @@ func (clnt *TeamClient) GrowTeam(tkn string, tm string, dev *models.Developer) e
 	return nil
 }
 
+func (clnt *TeamClient) JoinTeam(tkn string, tm string) error {
+	var (
+		err       error
+		req       *http.Request
+		res       *http.Response
+		joinTmUrl *url.URL
+	)
+
+	joinTmUrl, err = getUrl(clnt.UrlString, "/team/join/")
+	if err != nil {
+		return err
+	}
+	q := joinTmUrl.Query()
+	q.Set("team", tm)
+	joinTmUrl.RawQuery = q.Encode()
+
+	req, err = http.NewRequest(http.MethodPost, joinTmUrl.String(), EMPTY_BYTE_ARRAY)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Authorization", tkn)
+
+	res, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != http.StatusOK {
+		return getErrorFromResponse(res)
+	}
+	return nil
+}
+
+func (clnt *TeamClient) RespondJoinRequest(tkn string, tm string, resJnReq *models.RespondJoinRequestReq) error {
+	var (
+		err          error
+		req          *http.Request
+		res          *http.Response
+		resJnUrl     *url.URL
+		resJnReqData []byte
+	)
+
+	resJnReqData, err = json.Marshal(resJnReq)
+	if err != nil {
+		return err
+	}
+
+	resJnUrl, err = getUrl(clnt.UrlString, "/team/respond-join/")
+	if err != nil {
+		return err
+	}
+	q := resJnUrl.Query()
+	q.Set("team", tm)
+	resJnUrl.RawQuery = q.Encode()
+
+	req, err = http.NewRequest(http.MethodPost, resJnUrl.String(), bytes.NewBuffer(resJnReqData))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Authorization", tkn)
+
+	res, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != http.StatusOK {
+		return getErrorFromResponse(res)
+	}
+	return nil
+}
+
 func (clnt *TeamClient) InfoTeam(tkn string, tm string) (*models.Team, error) {
 	var (
 		err    error
@@ -105,7 +176,7 @@ func (clnt *TeamClient) InfoTeam(tkn string, tm string) (*models.Team, error) {
 	q.Set("team", tm)
 	infoTmUrl.RawQuery = q.Encode()
 
-	req, err = http.NewRequest(http.MethodGet, infoTmUrl.String(), bytes.NewBuffer([]byte{}))
+	req, err = http.NewRequest(http.MethodGet, infoTmUrl.String(), EMPTY_BYTE_ARRAY)
 	if err != nil {
 		return nil, err
 	}
